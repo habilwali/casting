@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: chromecast-gateway-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    networks:
+      - chromecast-network
+
+  chromecast-gateway:
+    build: .
+    container_name: chromecast-gateway-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    environment:
+      MONGODB_URI: mongodb://admin:password@mongodb:27017/chromecast-gateway?authSource=admin
+      NEXTAUTH_SECRET: your-secret-key-here
+      ADMIN_PASSWORD: admin123
+      SERVER_HOST: 192.168.70.215
+      SERVER_PORT: 3000
+      MOBILE_NETWORK: 192.168.10.0/24
+      CHROMECAST_NETWORK: 192.168.20.0/24
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    privileged: true
+    networks:
+      - chromecast-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  chromecast-network:
+    driver: bridge
