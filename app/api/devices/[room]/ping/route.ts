@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Device from '@/models/Device';
-import { pingDevice } from '@/lib/utils';
+import { isChromecastReachable } from '@/lib/reachability';
 
 export async function POST(
   request: NextRequest,
@@ -17,8 +17,8 @@ export async function POST(
       return NextResponse.json({ online: false, error: 'Device not found' }, { status: 404 });
     }
 
-    // Check if device is reachable
-    const isOnline = await pingDevice(device.ipAddress);
+    // Multi-strategy reachability check
+    const isOnline = await isChromecastReachable(device.ipAddress);
 
     return NextResponse.json({
       room,
